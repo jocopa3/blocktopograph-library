@@ -32,6 +32,8 @@ public enum MapType {
 
     //render only the valuable blocks to mine (diamonds, emeralds, gold, etc.)
     OVERWORLD_XRAY(new XRayRenderer(), Dimension.OVERWORLD),
+    
+    OVERWORLD_REDSTONE(new RedstoneRenderer(), Dimension.OVERWORLD),
 
     //block-light renderer: from light-sources like torches etc.
     OVERWORLD_BLOCK_LIGHT(new BlockLightRenderer(), Dimension.OVERWORLD),

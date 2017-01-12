@@ -109,7 +109,7 @@ public final class NBTInputStream
                 length = this.littleEndian ? Integer.reverseBytes(this.is.readInt()) : this.is.readInt();
 
                 NBTConstants.NBTType childNbtType = NBTConstants.NBTType.typesByID.get(childType);
-                if(childNbtType.id == 0) return new ListTag(name, new ArrayList<Tag>());
+                if(childNbtType.id == 0) return new ListTag(name, new ArrayList<Tag>(), childNbtType);
                 Class<? extends Tag> clazz = childNbtType.tagClazz;
                 ArrayList<Tag> tagList = new ArrayList<>();
                 for (int i = 0; i < length; i++) {
@@ -122,7 +122,7 @@ public final class NBTInputStream
                     }
                     tagList.add(tag);
                 }
-                return new ListTag(name, tagList);
+                return new ListTag(name, tagList, childNbtType);
             }
             case COMPOUND: {
                 ArrayList<Tag> tagMap = new ArrayList<>();

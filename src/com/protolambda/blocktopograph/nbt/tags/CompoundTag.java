@@ -28,6 +28,7 @@ public class CompoundTag extends Tag<ArrayList<Tag>> {
         return null;
     }
 
+    @Override
     public String toString(){
         String name = getName();
         String type = getType().name();

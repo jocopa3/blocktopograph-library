@@ -52,12 +52,13 @@ public class V0_9_TerrainChunkData extends TerrainChunkData {
         if(buf == null){
             try {
                 byte[] rawData = this.chunk.worldData.getChunkData(chunk.x, chunk.z, ChunkTag.V0_9_LEGACY_TERRAIN, chunk.dimension, subChunk, false);
-                if(rawData == null) return false;
+                if(rawData == null) this.buf = ByteBuffer.wrap(new byte[]{});// return false;
                 this.buf = ByteBuffer.wrap(rawData);
                 return true;
             } catch (Exception e){
+                this.buf = ByteBuffer.wrap(new byte[]{});
                 //data is not present
-                return false;
+                return true;
             }
         }
         else return true;
@@ -120,7 +121,7 @@ public class V0_9_TerrainChunkData extends TerrainChunkData {
 
     @Override
     public byte getBlockTypeId(int x, int y, int z) {
-        if (x >= chunkW || y >= chunkH || z >= chunkL || x < 0 || y < 0 || z < 0) {
+        if (buf.hasArray() && buf.array().length == 0 || x >= chunkW || y >= chunkH || z >= chunkL || x < 0 || y < 0 || z < 0) {
             return 0;
         }
         return buf.get(POS_BLOCK_IDS + getOffset(x, y, z));
@@ -128,7 +129,7 @@ public class V0_9_TerrainChunkData extends TerrainChunkData {
 
     @Override
     public byte getBlockData(int x, int y, int z) {
-        if (x >= chunkW || y >= chunkH || z >= chunkL || x < 0 || y < 0 || z < 0) {
+        if (buf.hasArray() && buf.array().length == 0 || x >= chunkW || y >= chunkH || z >= chunkL || x < 0 || y < 0 || z < 0) {
             return 0;
         }
         int offset = getOffset(x, y, z);
@@ -138,7 +139,7 @@ public class V0_9_TerrainChunkData extends TerrainChunkData {
 
     @Override
     public byte getSkyLightValue(int x, int y, int z) {
-        if (x >= chunkW || y >= chunkH || z >= chunkL || x < 0 || y < 0 || z < 0) {
+        if (buf.hasArray() && buf.array().length == 0 || buf.hasArray() && buf.array().length != 0 || x >= chunkW || y >= chunkH || z >= chunkL || x < 0 || y < 0 || z < 0) {
             return 0;
         }
         int offset = getOffset(x, y, z);
@@ -148,7 +149,7 @@ public class V0_9_TerrainChunkData extends TerrainChunkData {
 
     @Override
     public byte getBlockLightValue(int x, int y, int z) {
-        if (x >= chunkW || y >= chunkH || z >= chunkL || x < 0 || y < 0 || z < 0) {
+        if (buf.hasArray() && buf.array().length == 0 || x >= chunkW || y >= chunkH || z >= chunkL || x < 0 || y < 0 || z < 0) {
             return 0;
         }
         int offset = getOffset(x, y, z);
@@ -161,7 +162,7 @@ public class V0_9_TerrainChunkData extends TerrainChunkData {
      */
     @Override
     public void setBlockTypeId(int x, int y, int z, int type) {
-        if (x >= chunkW || y >= chunkH || z >= chunkL || x < 0 || y < 0 || z < 0) {
+        if (buf.hasArray() && buf.array().length == 0 || x >= chunkW || y >= chunkH || z >= chunkL || x < 0 || y < 0 || z < 0) {
             return;
         }
         buf.put(POS_BLOCK_IDS + getOffset(x, y, z), (byte) type);
@@ -169,7 +170,7 @@ public class V0_9_TerrainChunkData extends TerrainChunkData {
 
     @Override
     public void setBlockData(int x, int y, int z, int newData) {
-        if (x >= chunkW || y >= chunkH || z >= chunkL || x < 0 || y < 0 || z < 0) {
+        if (buf.hasArray() && buf.array().length == 0 || x >= chunkW || y >= chunkH || z >= chunkL || x < 0 || y < 0 || z < 0) {
             return;
         }
         int offset = getOffset(x, y, z);
@@ -188,21 +189,29 @@ public class V0_9_TerrainChunkData extends TerrainChunkData {
 
     @Override
     public byte getBiome(int x, int z) {
+        if(buf.hasArray() && buf.array().length == 0)
+            return 0;
         return buf.get(POS_BIOME_DATA + (get2Di(x, z) * 4));
     }
 
     @Override
     public byte getGrassR(int x, int z) {
+        if(buf.hasArray() && buf.array().length == 0)
+            return 0;
         return buf.get(POS_BIOME_DATA + (get2Di(x, z) * 4) + 1);
     }
 
     @Override
     public byte getGrassG(int x, int z) {
+        if(buf.hasArray() && buf.array().length == 0)
+            return 0;
         return buf.get(POS_BIOME_DATA + (get2Di(x, z) * 4) + 2);
     }
 
     @Override
     public byte getGrassB(int x, int z) {
+        if(buf.hasArray() && buf.array().length == 0)
+            return 0;
         return buf.get(POS_BIOME_DATA + (get2Di(x, z) * 4) + 3);
     }
 
@@ -212,6 +221,8 @@ public class V0_9_TerrainChunkData extends TerrainChunkData {
 
     @Override
     public int getHeightMapValue(int x, int z) {
+        if(buf.hasArray() && buf.array().length == 0)
+            return 0;
         return buf.get(POS_HEIGHTMAP + get2Di(x, z)) & 0xff;
     }
 

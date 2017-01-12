@@ -3,6 +3,8 @@ package com.protolambda.blocktopograph.chunk;
 import com.protolambda.blocktopograph.world.WorldData;
 import com.protolambda.blocktopograph.chunk.terrain.TerrainChunkData;
 import com.protolambda.blocktopograph.map.Dimension;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
@@ -16,23 +18,27 @@ public class Chunk {
 
     private Version version;
 
-    private AtomicReferenceArray<TerrainChunkData>
-            terrain = new AtomicReferenceArray<>(256);
+    //private AtomicReferenceArray<TerrainChunkData>
+    //        terrain = new AtomicReferenceArray<>(256);
 
     private volatile NBTChunkData entity, blockEntity;
+    
+    private Map<Byte, TerrainChunkData> terrain;
 
     public Chunk(WorldData worldData, int x, int z, Dimension dimension) {
         this.worldData = worldData;
         this.x = x;
         this.z = z;
         this.dimension = dimension;
+        terrain = new ConcurrentHashMap<>();
     }
 
     public TerrainChunkData getTerrain(byte subChunk) throws Version.VersionException {
-        TerrainChunkData data = terrain.get(subChunk & 0xff);
+        TerrainChunkData data = terrain.get((byte)(subChunk & 0xff));
         if(data == null){
             data = this.getVersion().createTerrainChunkData(this, subChunk);
-            terrain.set(subChunk & 0xff, data);
+            if(data != null)
+                terrain.put((byte)(subChunk & 0xff), data);
         }
         return data;
     }

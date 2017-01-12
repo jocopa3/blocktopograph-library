@@ -4,7 +4,6 @@ import com.protolambda.blocktopograph.map.Dimension;
 import com.protolambda.blocktopograph.util.NamedBitmapProvider;
 import com.protolambda.blocktopograph.util.NamedBitmapProviderHandle;
 import com.protolambda.blocktopograph.util.math.Vector3;
-import java.awt.image.BufferedImage;
 
 public class AbstractMarker implements NamedBitmapProviderHandle {
 

@@ -48,6 +48,5 @@ public class IOUtil {
         }
 
         return String.format(Locale.ENGLISH, "%.2f %s", v, suffix);
-
     }
 }

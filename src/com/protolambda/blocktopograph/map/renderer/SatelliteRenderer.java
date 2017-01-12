@@ -62,7 +62,7 @@ public class SatelliteRenderer implements MapRenderer {
                         (z == 0) ? (north ? dataN.getHeightMapValue(x, dimension.chunkL - 1) : y)//chunk edge
                                  : data.getHeightMapValue(x, z - 1)//within chunk
                 );
-
+                //System.out.println(chunkX+" "+chunkZ);
                 for(i = 0; i < pL; i++){
                     for(j = 0; j < pW; j++){
                         bm.setRGB(tX + j, tY + i, color);

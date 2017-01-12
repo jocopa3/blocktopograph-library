@@ -6,15 +6,18 @@ import com.protolambda.blocktopograph.nbt.convert.NBTConstants;
 import com.protolambda.blocktopograph.nbt.tags.CompoundTag;
 import com.protolambda.blocktopograph.nbt.tags.LongTag;
 import com.protolambda.blocktopograph.util.io.TextFile;
-import org.iq80.leveldb.DBIterator;
 import com.protolambda.blocktopograph.Log;
+import static com.protolambda.blocktopograph.world.WorldData.asString;
+
+import com.protonail.leveldb.jna.LevelDB;
+import com.protonail.leveldb.jna.LevelDBKeyIterator;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import static org.iq80.leveldb.impl.Iq80DBFactory.asString;
 
 public class World implements Serializable {
 
@@ -36,6 +39,8 @@ public class World implements Serializable {
         // (PascalCase, camelCase, snake_case, lowercase, m-prefix(Android), tilde-prefix; it's all there!)
         BIOME_DATA("BiomeData"),
         OVERWORLD("Overworld"),
+        NETHER("Nether"),
+        THEEND("TheEnd"),
         M_VILLAGES("mVillages"),
         PORTALS("portals"),
         LOCAL_PLAYER("~local_player"),
@@ -191,26 +196,19 @@ public class World implements Serializable {
 
     //function meant for debugging, not used in production
     public void logDBKeys() {
+
+        LevelDBKeyIterator it = new LevelDBKeyIterator(this.worldData.db, this.worldData.globalReadOptions);
+
         try {
-            this.getWorldData();
-
-            worldData.load();
-
-            DBIterator iterator = worldData.db.iterator();
-
-            for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
-                byte[] key = iterator.peekNext().getKey();
-                String value = asString(iterator.peekNext().getValue());
-                /*if(key.length == 9 && key[8] == RegionDataType.TERRAIN.dataID) */ Log.d("key: " + asString(key) + " key in Hex: " + WorldData.bytesToHex(key, 0, key.length) + " size: " + value.length());
-
+            byte[] keyData = new byte[0];
+            for (it.seekToFirst(); it.hasNext(); keyData = it.next()) {
+                String value = asString(keyData);
+                if(keyData.length < 2 || keyData[keyData.length-1] == 0x76 || keyData[keyData.length-1] == 0x32 || keyData[keyData.length-1] == 0x31 || keyData[keyData.length-1] == 0x33 || keyData[keyData.length-1] == 0x2D || keyData[keyData.length-2] == 0x2F)
+                    continue;
+                /*if(key.length == 9 && key[8] == RegionDataType.TERRAIN.dataID) */ Log.d("key: " + value + " key in Hex: " + WorldData.bytesToHex(keyData, 0, keyData.length) + " size: " + keyData.length);
             }
-
-            iterator.close();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (WorldData.WorldDataLoadException ex) {
-            Logger.getLogger(World.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            it.close();
         }
     }
 }

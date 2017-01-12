@@ -59,7 +59,7 @@ public class WorldProvider implements WorldProviderInterface {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        byte[] entryData = worldData.db.get(keyBytes);
+        byte[] entryData = worldData.db.get(keyBytes, worldData.globalReadOptions);
         if (entryData == null) {
             return null;
         }
@@ -78,7 +78,7 @@ public class WorldProvider implements WorldProviderInterface {
                 try {
                     WorldData wData = world.getWorldData();
                     wData.load();
-                    wData.db.put(keyBytes, DataConverter.write(workCopy));
+                    wData.db.put(keyBytes, DataConverter.write(workCopy), wData.globalWriteOptions);
                     return true;
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -257,8 +257,6 @@ public class WorldProvider implements WorldProviderInterface {
     public void changeMapType(MapType mapType) {
         this.mapType = mapType;
         this.dimension = mapType.dimension;
-        //don't forget to do a reset-tileview, the mapfragment should know of this change ASAP.
-        //mapFragment.resetTileView();
     }
 
     @Override
@@ -268,7 +266,6 @@ public class WorldProvider implements WorldProviderInterface {
 
     //@Override
     public ChunkManager getChunkManager(Dimension d) {
-        System.out.println(d.name);
         switch (d) {
             case OVERWORLD:
                 return cmOverworld;

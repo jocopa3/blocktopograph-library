@@ -5,20 +5,35 @@ import com.protolambda.blocktopograph.nbt.convert.NBTConstants;
 import java.util.ArrayList;
 
 public class ListTag extends Tag<ArrayList<Tag>> {
-
+    private NBTConstants.NBTType listType;
 
     private static final long serialVersionUID = -4765717626522070446L;
 
-    public ListTag(String name, ArrayList<Tag> value) {
+    public ListTag(String name, ArrayList<Tag> value, NBTConstants.NBTType listType) {
         super(name, value);
+        
+        this.listType = listType;
     }
 
     @Override
     public NBTConstants.NBTType getType() {
         return NBTConstants.NBTType.LIST;
     }
+    
+    public NBTConstants.NBTType getListType() {
+        return listType;
+    }
+    
+    public boolean setListType(NBTConstants.NBTType type) {
+        if(getValue() == null || getValue().isEmpty()) {
+            listType = type;
+            return true;
+        }
+        
+        return false;
+    }
 
-
+    @Override
     public String toString(){
         String name = getName();
         String type = getType().name();
@@ -51,8 +66,8 @@ public class ListTag extends Tag<ArrayList<Tag>> {
             for(Tag tag : value){
                 copy.add(tag.getDeepCopy());
             }
-            return new ListTag(name, copy);
-        } else return new ListTag(name, null);
+            return new ListTag(name, copy, listType);
+        } else return new ListTag(name, null, listType);
     }
 
 }

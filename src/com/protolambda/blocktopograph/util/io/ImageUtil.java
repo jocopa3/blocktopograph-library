@@ -7,6 +7,7 @@ package com.protolambda.blocktopograph.util.io;
 
 import com.protolambda.blocktopograph.Log;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -25,7 +26,7 @@ public class ImageUtil {
         BufferedImage image = null;
 
         try {
-            System.out.println(getClass().getResource(path));
+            //System.out.println(getClass().getResource(path));
             image = ImageIO.read(getClass().getResourceAsStream(path));
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -45,6 +46,18 @@ public class ImageUtil {
 
     public static BufferedImage scaleImage(BufferedImage srcImg, int w, int h) {
         BufferedImage scaledImage = new BufferedImage(w, h, srcImg.getType());
+        Graphics2D g2d = scaledImage.createGraphics();
+
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+        g2d.drawImage(srcImg, 0, 0, w, h, null);
+
+        g2d.dispose();
+
+        return scaledImage;
+    }
+    
+    public static BufferedImage scaleImage(Image srcImg, int w, int h) {
+        BufferedImage scaledImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = scaledImage.createGraphics();
 
         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);

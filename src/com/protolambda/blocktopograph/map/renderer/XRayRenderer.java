@@ -8,15 +8,14 @@ import com.protolambda.blocktopograph.map.Block;
 import com.protolambda.blocktopograph.map.Dimension;
 import java.awt.image.BufferedImage;
 
-
 public class XRayRenderer implements MapRenderer {
 
     /*
     TODO make the X-ray viewable blocks configurable, without affecting performance too much...
      */
-
     /**
      * Render a single chunk to provided bitmap (bm)
+     *
      * @param cm ChunkManager, provides chunks, which provide chunk-data
      * @param bm Bitmap to render to
      * @param dimension Mapped dimension
@@ -32,18 +31,20 @@ public class XRayRenderer implements MapRenderer {
      * @param pL length (Z) of one block in pixels
      * @return bm is returned back
      *
-     * @throws Version.VersionException when the version of the chunk is unsupported.
+     * @throws Version.VersionException when the version of the chunk is
+     * unsupported.
      */
     public BufferedImage renderToBitmap(ChunkManager cm, BufferedImage bm, Dimension dimension, int chunkX, int chunkZ, int bX, int bZ, int eX, int eZ, int pX, int pY, int pW, int pL) throws Version.VersionException {
 
         Chunk chunk = cm.getChunk(chunkX, chunkZ);
         Version cVersion = chunk.getVersion();
 
-        if(cVersion == Version.ERROR) return MapType.ERROR.renderer.renderToBitmap(cm, bm, dimension, chunkX, chunkZ, bX, bZ, eX, eZ, pX, pY, pW, pL);
+        if (cVersion == Version.ERROR) {
+            return MapType.ERROR.renderer.renderToBitmap(cm, bm, dimension, chunkX, chunkZ, bX, bZ, eX, eZ, pX, pY, pW, pL);
+        }
 
         //the bottom sub-chunk is sufficient to get heightmap data.
         TerrainChunkData data;
-
 
         int x, y, z, color, i, j, tX, tY;
 
@@ -61,31 +62,69 @@ public class XRayRenderer implements MapRenderer {
         int r, g, b;
 
         int subChunk;
-        for(subChunk = 0; subChunk < cVersion.subChunks; subChunk++) {
+        for (subChunk = 0; subChunk < cVersion.subChunks; subChunk++) {
             data = chunk.getTerrain((byte) subChunk);
-            if (data == null || !data.loadTerrain()) break;
+            if (data == null || !data.loadTerrain()) {
+                break;
+            }
 
             for (z = bZ; z < eZ; z++) {
                 for (x = bX; x < eX; x++) {
 
+                    columnLoop:
                     for (y = 0; y < cVersion.subChunkHeight; y++) {
                         block = Block.getBlock(data.getBlockTypeId(x, y, z) & 0xff, 0);
 
                         index2D = (z * rW) + x;
-                        if (block == null || block.id <= 1)
+                        switch (block) {
+                            case B_56_0_DIAMOND_ORE:
+                                bestBlock[index2D] = block;
+                                break columnLoop;
+                            case B_129_0_EMERALD_ORE:
+                                bValue = 8;
+                                break;
+                            case B_153_0_QUARTZ_ORE:
+                                bValue = 7;
+                                break;
+                            case B_14_0_GOLD_ORE:
+                                bValue = 6;
+                                break;
+                            case B_15_0_IRON_ORE:
+                                bValue = 5;
+                                break;
+                            case B_73_0_REDSTONE_ORE:
+                                bValue = 4;
+                                break;
+                            case B_21_0_LAPIS_ORE:
+                                bValue = 3;
+                                break;
+                            default:
+                                bValue = 0;
+                        }
+                        /*
+                        if (block == null || block.id <= 1) {
                             continue;
-                        else if (block == Block.B_56_0_DIAMOND_ORE) {
+                        } else if (block == Block.B_56_0_DIAMOND_ORE) {
                             bestBlock[index2D] = block;
                             break;
-                        } else if (block == Block.B_129_0_EMERALD_ORE) bValue = 8;
-                        else if (block == Block.B_153_0_QUARTZ_ORE) bValue = 7;
-                        else if (block == Block.B_14_0_GOLD_ORE) bValue = 6;
-                        else if (block == Block.B_15_0_IRON_ORE) bValue = 5;
-                        else if (block == Block.B_73_0_REDSTONE_ORE) bValue = 4;
-                        else if (block == Block.B_21_0_LAPIS_ORE) bValue = 3;
-                            //else if(block == Block.COAL_ORE) bValue = 2;
-                            //else if(b == Block.LAVA || b == Block.STATIONARY_LAVA) bValue = 1;
-                        else bValue = 0;
+                        } else if (block == Block.B_129_0_EMERALD_ORE) {
+                            bValue = 8;
+                        } else if (block == Block.B_153_0_QUARTZ_ORE) {
+                            bValue = 7;
+                        } else if (block == Block.B_14_0_GOLD_ORE) {
+                            bValue = 6;
+                        } else if (block == Block.B_15_0_IRON_ORE) {
+                            bValue = 5;
+                        } else if (block == Block.B_73_0_REDSTONE_ORE) {
+                            bValue = 4;
+                        } else if (block == Block.B_21_0_LAPIS_ORE) {
+                            bValue = 3;
+                        } //else if(block == Block.B_16_0_COAL_ORE) bValue = 2;
+                        //else if(block == Block.B_10_0_FLOWING_LAVA || block == Block.B_11_0_LAVA) bValue = 1;
+                        else {
+                            bValue = 0;
+                        }
+                        */
 
                         if (bValue > minValue[(z * rW) + x]) {
                             minValue[index2D] = bValue;
@@ -96,7 +135,9 @@ public class XRayRenderer implements MapRenderer {
             }
         }
 
-        if(subChunk == 0) return MapType.CHESS.renderer.renderToBitmap(cm, bm, dimension, chunkX, chunkZ, bX, bZ, eX, eZ, pX, pY, pW, pL);
+        if (subChunk == 0) {
+            return MapType.CHESS.renderer.renderToBitmap(cm, bm, dimension, chunkX, chunkZ, bX, bZ, eX, eZ, pX, pY, pW, pL);
+        }
 
         for (z = bZ, tY = pY; z < eZ; z++, tY += pL) {
             for (x = bX, tX = pX; x < eX; x++, tX += pW) {
@@ -115,23 +156,30 @@ public class XRayRenderer implements MapRenderer {
                     g += g > average ? (g - average) * (g - average) : -(g - average) * (g - average);
                     b += b > average ? (b - average) * (b - average) : -(b - average) * (b - average);
 
-                    if (r > 0xff) r = 0xff;
-                    else if (r < 0) r = 0;
-                    if (g > 0xff) g = 0xff;
-                    else if (g < 0) g = 0;
-                    if (b > 0xff) b = 0xff;
-                    else if (b < 0) b = 0;
+                    if (r > 0xff) {
+                        r = 0xff;
+                    } else if (r < 0) {
+                        r = 0;
+                    }
+                    if (g > 0xff) {
+                        g = 0xff;
+                    } else if (g < 0) {
+                        g = 0;
+                    }
+                    if (b > 0xff) {
+                        b = 0xff;
+                    } else if (b < 0) {
+                        b = 0;
+                    }
 
                     color = (r << 16) | (g << 8) | (b) | 0xff000000;
                 }
-
 
                 for (i = 0; i < pL; i++) {
                     for (j = 0; j < pW; j++) {
                         bm.setRGB(tX + j, tY + i, color);
                     }
                 }
-
 
             }
         }
