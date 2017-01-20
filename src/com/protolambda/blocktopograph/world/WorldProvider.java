@@ -13,11 +13,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.protolambda.blocktopograph.chunk.NBTChunkData;
+import com.protolambda.blocktopograph.chunk.Version;
 import com.protolambda.blocktopograph.map.renderer.MapType;
 import com.protolambda.blocktopograph.nbt.EditableNBT;
 import com.protolambda.blocktopograph.nbt.convert.DataConverter;
 import com.protolambda.blocktopograph.nbt.tags.CompoundTag;
 import com.protolambda.blocktopograph.nbt.tags.Tag;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class WorldProvider implements WorldProviderInterface {
 
@@ -264,6 +267,22 @@ public class WorldProvider implements WorldProviderInterface {
         return this.world;
     }
 
+    public NBTChunkData getChunkEntityNBT(int x, int z, Dimension d) {
+        try {
+            return getChunkManager(d).getChunk(x, z).getEntity();
+        } catch (Version.VersionException ex) {
+            return null;
+        }
+    }
+
+    public NBTChunkData getChunkBlockEntityNBT(int x, int z, Dimension d) {
+        try {
+            return getChunkManager(d).getChunk(x, z).getBlockEntity();
+        } catch (Version.VersionException ex) {
+            return null;
+        }
+    }
+    
     //@Override
     public ChunkManager getChunkManager(Dimension d) {
         switch (d) {

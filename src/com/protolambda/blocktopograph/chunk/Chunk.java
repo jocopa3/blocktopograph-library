@@ -85,6 +85,10 @@ public class Chunk {
 
     public int getHighestBlockYUnderAt(int x, int z, int y) throws Version.VersionException {
         Version cVersion = getVersion();
+        
+        if(cVersion.subChunkHeight <= 0)
+            return -1;
+        
         int offset = y % cVersion.subChunkHeight;
         int subChunk = y / cVersion.subChunkHeight;
         TerrainChunkData data;

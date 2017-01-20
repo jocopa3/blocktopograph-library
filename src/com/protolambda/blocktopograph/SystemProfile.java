@@ -11,9 +11,10 @@ package com.protolambda.blocktopograph;
  */
 public class SystemProfile {
     private static final SystemProfile SYSTEM_PROFILE = new SystemProfile();
+    private static long AvailableMemory = (long)(SYSTEM_PROFILE.SYSTEM_RAM * 0.85);
     
     private final int CPU_CORES; // Number of usable cores
-    private final long SYSTEM_RAM; // in MBs
+    private long SYSTEM_RAM; // in MBs
     
     private UsageLevel CPU_USE;
     private UsageLevel RAM_USE;
@@ -57,15 +58,41 @@ public class SystemProfile {
         }
     }
     
+    private void update() {
+        SYSTEM_RAM = Runtime.getRuntime().totalMemory();
+        AvailableMemory = (long)(SYSTEM_RAM * 0.85);
+        System.out.println(SYSTEM_RAM);
+        
+        if(SYSTEM_RAM < 1250000000L) {
+            RAM_USE = UsageLevel.VERY_STRICT;
+        } else if(SYSTEM_RAM < 2500000000L) {
+            RAM_USE = UsageLevel.STRICT;
+        } else if(SYSTEM_RAM < 4500000000L) {
+            RAM_USE = UsageLevel.MODEST;
+        } else if(SYSTEM_RAM < 8500000000L) {
+            RAM_USE = UsageLevel.GREEDY;
+        } else {
+            RAM_USE = UsageLevel.VERY_GREEDY;
+        }
+    }
+    
     public static int getCPUCores() {
         return SYSTEM_PROFILE.CPU_CORES;
     }
     
     public static long getAvailableRAM() {
+        SYSTEM_PROFILE.update();
         return SYSTEM_PROFILE.SYSTEM_RAM;
     }
     
     public static UsageLevel getRAMUsagePolicy() {
         return SYSTEM_PROFILE.RAM_USE;
+    }
+    
+    public static long calculateMaxObjects(long estimatedSize, double ratio) {
+        SYSTEM_PROFILE.update();
+        estimatedSize *= 1.05;
+        
+        return (long)((AvailableMemory / estimatedSize) * ratio);
     }
 }

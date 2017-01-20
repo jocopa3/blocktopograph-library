@@ -19,8 +19,7 @@ public class ChunkManager {
         this.worldData = worldData;
         this.dimension = dimension;
         
-        // MAGIC!
-        int cacheSize = 7000 * SystemProfile.getRAMUsagePolicy().mult;
+        long cacheSize = SystemProfile.calculateMaxObjects(10241, 0.6);
         
         System.out.println("Chunk Cache Size: " + cacheSize);
         
