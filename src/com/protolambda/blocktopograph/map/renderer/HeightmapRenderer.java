@@ -32,6 +32,7 @@ public class HeightmapRenderer implements MapRenderer {
     public BufferedImage renderToBitmap(ChunkManager cm, BufferedImage bm, Dimension dimension, int chunkX, int chunkZ, int bX, int bZ, int eX, int eZ, int pX, int pY, int pW, int pL) throws Version.VersionException {
 
         Chunk chunk = cm.getChunk(chunkX, chunkZ);
+        if(chunk == null) return MapType.CHESS.renderer.renderToBitmap(cm, bm, dimension, chunkX, chunkZ, bX, bZ, eX, eZ, pX, pY, pW, pL);
         Version cVersion = chunk.getVersion();
 
         if(cVersion == Version.ERROR) return MapType.ERROR.renderer.renderToBitmap(cm, bm, dimension, chunkX, chunkZ, bX, bZ, eX, eZ, pX, pY, pW, pL);
@@ -41,11 +42,24 @@ public class HeightmapRenderer implements MapRenderer {
         if(data == null || !data.load2DData()) return MapType.CHESS.renderer.renderToBitmap(cm, bm, dimension, chunkX, chunkZ, bX, bZ, eX, eZ, pX, pY, pW, pL);
 
 
-        TerrainChunkData dataW = cm.getChunk(chunkX - 1, chunkZ).getTerrain((byte) 0);
-        TerrainChunkData dataN = cm.getChunk(chunkX, chunkZ-1).getTerrain((byte) 0);
+        boolean west = true, north = true;
+        TerrainChunkData dataW = null, dataN = null;
+        
+        Chunk dataWC = cm.getChunk(chunkX - 1, chunkZ);
+        if(dataWC != null)
+            dataW = dataWC.getTerrain((byte) 0);
+        else
+            west = false;
+        
+        Chunk dataNC = cm.getChunk(chunkX, chunkZ-1);
+        if(dataNC != null)
+            dataN = dataNC.getTerrain((byte) 0);
+        else
+            north = false;
+        
 
-        boolean west = dataW != null && dataW.load2DData(),
-                north = dataN != null && dataN.load2DData();
+        west &= dataW != null && dataW.load2DData();
+        north &= dataN != null && dataN.load2DData();
 
         int x, y, z, color, i, j, tX, tY;
         int yW, yN;

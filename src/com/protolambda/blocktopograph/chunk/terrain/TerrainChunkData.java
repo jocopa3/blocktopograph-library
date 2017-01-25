@@ -6,6 +6,7 @@ import com.protolambda.blocktopograph.chunk.ChunkData;
 
 public abstract class TerrainChunkData extends ChunkData {
 
+    public boolean isNull;
     public final byte subChunk;
 
     public TerrainChunkData(Chunk chunk, byte subChunk) {

@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentMap;
 public class ChunkManager {
 
     private ConcurrentMap<Long, Chunk> chunks;
+    private ConcurrentMap<Long, Byte> nullChunks;
 
     private WorldData worldData;
 
@@ -18,14 +19,56 @@ public class ChunkManager {
     public ChunkManager(WorldData worldData, Dimension dimension) {
         this.worldData = worldData;
         this.dimension = dimension;
-        
-        long cacheSize = SystemProfile.calculateMaxObjects(10241, 0.6);
-        
+
+        createCache();
+    }
+
+    private void createCache() {
+        if (chunks != null) {
+            chunks.clear();
+            chunks = null;
+        }
+
+        long cacheSize = SystemProfile.calculateMaxObjects(10265, 0.6);
+
         System.out.println("Chunk Cache Size: " + cacheSize);
-        
+
         chunks = new ConcurrentLinkedHashMap.Builder<Long, Chunk>()
                 .maximumWeightedCapacity(cacheSize)
                 .build();
+
+        if (nullChunks != null) {
+            nullChunks.clear();
+            nullChunks = null;
+        }
+
+        cacheSize = SystemProfile.calculateMaxObjects(40, 0.1);
+
+        System.out.println("Null Chunk Cache Size: " + cacheSize);
+
+        nullChunks = new ConcurrentLinkedHashMap.Builder<Long, Byte>()
+                .maximumWeightedCapacity(cacheSize)
+                .build();
+    }
+
+    private int cacheClears = 0;
+
+    public void clearCache() {
+        clearCache(false);
+    }
+    
+    public void clearCache(boolean forceClear) {
+        cacheClears++;
+
+        if (cacheClears >= 3 && !forceClear) {
+            createCache();
+            cacheClears = 0;
+        } else {
+            chunks.clear();
+            nullChunks.clear();
+        }
+
+        System.gc();
     }
 
     public static long xzToKey(int x, int z) {
@@ -34,16 +77,28 @@ public class ChunkManager {
 
     public Chunk getChunk(int cX, int cZ) {
         long key = xzToKey(cX, cZ);
-        Chunk chunk = chunks.get(key);
-        if (chunk == null) {
+        Chunk chunk;
+
+        if (nullChunks.containsKey(key)) {
+            return null;
+        } else if (!chunks.containsKey(key)) {
             chunk = new Chunk(worldData, cX, cZ, dimension);
-            this.chunks.put(key, chunk);
+            if (chunk.isEmptyChunk()) {
+                nullChunks.put(key, (byte) 0);
+                return null;
+            } else {
+                this.chunks.put(key, chunk);
+            }
             //System.out.println(this.dimension.name + ": " + this.chunks.size() + " [" + cX + ", " + cZ + "]");
+        } else {
+            chunk = chunks.get(key);
         }
+
         return chunk;
     }
 
     public void disposeAll() {
-        this.chunks.clear();
+        chunks.clear();
+        nullChunks.clear();
     }
 }

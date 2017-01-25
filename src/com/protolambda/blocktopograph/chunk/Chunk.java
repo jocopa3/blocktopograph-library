@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 public class Chunk {
@@ -33,6 +35,24 @@ public class Chunk {
         terrain = new ConcurrentHashMap<>();
     }
 
+    public boolean isEmptyChunk() {
+        TerrainChunkData data = terrain.get((byte)0);
+        
+        if(data == null) {
+            try {
+                data = this.getVersion().createTerrainChunkData(this, (byte)0);
+                if(data == null)
+                    return true;
+                else
+                    return false;
+            } catch (Version.VersionException ex) {
+                return true;
+            }
+        } else {
+            return false;
+        }
+    }
+    
     public TerrainChunkData getTerrain(byte subChunk) throws Version.VersionException {
         TerrainChunkData data = terrain.get((byte)(subChunk & 0xff));
         if(data == null){

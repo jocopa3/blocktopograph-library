@@ -7,9 +7,7 @@ import com.protolambda.blocktopograph.chunk.ChunkTag;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-
 public class V0_9_TerrainChunkData extends TerrainChunkData {
-
 
     public volatile ByteBuffer buf;
 
@@ -39,36 +37,43 @@ public class V0_9_TerrainChunkData extends TerrainChunkData {
     }
 
     @Override
-    public boolean loadTerrain(){
+    public boolean loadTerrain() {
         return tryLoad();
     }
 
     @Override
-    public boolean load2DData(){
+    public boolean load2DData() {
         return tryLoad();
     }
 
     public boolean tryLoad() {
-        if(buf == null){
+        if (buf == null) {
             try {
                 byte[] rawData = this.chunk.worldData.getChunkData(chunk.x, chunk.z, ChunkTag.V0_9_LEGACY_TERRAIN, chunk.dimension, subChunk, false);
-                if(rawData == null) this.buf = ByteBuffer.wrap(new byte[]{});// return false;
+                
+                if (rawData == null) {
+                    this.buf = null;
+                    this.isNull = true;
+                    return false;
+                }
+                
                 this.buf = ByteBuffer.wrap(rawData);
                 return true;
-            } catch (Exception e){
-                this.buf = ByteBuffer.wrap(new byte[]{});
+            } catch (Exception e) {
+                this.buf = null;
+                this.isNull = true;
                 //data is not present
-                return true;
+                return false;
             }
+        } else {
+            return true;
         }
-        else return true;
     }
 
     public byte[] toByteArray() throws IOException {
         //should return the original rawData array
         return buf.array();
     }
-
 
     @Override
     public void createEmpty() {
@@ -78,46 +83,44 @@ public class V0_9_TerrainChunkData extends TerrainChunkData {
         byte sandstone = (byte) 24;
 
         //generate super basic terrain (one layer of bedrock, 31 layers of sandstone)
-        for(x = 0; x < chunkW; x++){
-            for(z = 0; z < chunkL; z++){
-                for(y = 0; y < chunkH; y++, i++){
+        for (x = 0; x < chunkW; x++) {
+            for (z = 0; z < chunkL; z++) {
+                for (y = 0; y < chunkH; y++, i++) {
                     chunk[i] = (y == 0 ? bedrock : (y < 32 ? sandstone : 0));
                 }
             }
         }
 
         //fill meta-data with 0
-        for(; i < POS_SKY_LIGHT; i++){
+        for (; i < POS_SKY_LIGHT; i++) {
             chunk[i] = 0;
         }
 
         //fill blocklight with 0xff
-        for(; i < POS_BLOCK_LIGHT; i++){
+        for (; i < POS_BLOCK_LIGHT; i++) {
             chunk[i] = (byte) 0xff;
         }
 
         //fill block-light with 0xff
-        for(; i < POS_HEIGHTMAP; i++){
+        for (; i < POS_HEIGHTMAP; i++) {
             chunk[i] = (byte) 0xff;
         }
 
         //fill heightmap
-        for(; i < POS_BIOME_DATA; i++){
+        for (; i < POS_BIOME_DATA; i++) {
             chunk[i] = 32;
         }
 
         //fill biome data
-        for(; i < LENGTH;){
+        for (; i < LENGTH;) {
             chunk[i++] = 1;//biome: plains
             chunk[i++] = (byte) 42;//r
             chunk[i++] = (byte) 42;//g
             chunk[i++] = (byte) 42;//b
         }
 
-
         this.buf = ByteBuffer.wrap(chunk);
     }
-
 
     @Override
     public byte getBlockTypeId(int x, int y, int z) {
@@ -158,7 +161,8 @@ public class V0_9_TerrainChunkData extends TerrainChunkData {
     }
 
     /**
-     * Sets a block type, and also set the corresponding dirty table entry and set the saving flag.
+     * Sets a block type, and also set the corresponding dirty table entry and
+     * set the saving flag.
      */
     @Override
     public void setBlockTypeId(int x, int y, int z, int type) {
@@ -189,29 +193,33 @@ public class V0_9_TerrainChunkData extends TerrainChunkData {
 
     @Override
     public byte getBiome(int x, int z) {
-        if(buf.hasArray() && buf.array().length == 0)
+        if (buf.hasArray() && buf.array().length == 0) {
             return 0;
+        }
         return buf.get(POS_BIOME_DATA + (get2Di(x, z) * 4));
     }
 
     @Override
     public byte getGrassR(int x, int z) {
-        if(buf.hasArray() && buf.array().length == 0)
+        if (buf.hasArray() && buf.array().length == 0) {
             return 0;
+        }
         return buf.get(POS_BIOME_DATA + (get2Di(x, z) * 4) + 1);
     }
 
     @Override
     public byte getGrassG(int x, int z) {
-        if(buf.hasArray() && buf.array().length == 0)
+        if (buf.hasArray() && buf.array().length == 0) {
             return 0;
+        }
         return buf.get(POS_BIOME_DATA + (get2Di(x, z) * 4) + 2);
     }
 
     @Override
     public byte getGrassB(int x, int z) {
-        if(buf.hasArray() && buf.array().length == 0)
+        if (buf.hasArray() && buf.array().length == 0) {
             return 0;
+        }
         return buf.get(POS_BIOME_DATA + (get2Di(x, z) * 4) + 3);
     }
 
@@ -221,8 +229,9 @@ public class V0_9_TerrainChunkData extends TerrainChunkData {
 
     @Override
     public int getHeightMapValue(int x, int z) {
-        if(buf.hasArray() && buf.array().length == 0)
+        if (buf.hasArray() && buf.array().length == 0) {
             return 0;
+        }
         return buf.get(POS_HEIGHTMAP + get2Di(x, z)) & 0xff;
     }
 

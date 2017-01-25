@@ -5,11 +5,18 @@ import com.protolambda.blocktopograph.chunk.Chunk;
 import com.protolambda.blocktopograph.chunk.ChunkTag;
 import com.protolambda.blocktopograph.map.Biome;
 import com.protolambda.blocktopograph.util.Noise;
+import com.sun.jna.Native;
+import com.sun.jna.Pointer;
+import java.lang.ref.SoftReference;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.nio.Buffer;
 
 import java.nio.ByteBuffer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class V1_0_TerrainChunkData extends TerrainChunkData {
-
 
     public volatile ByteBuffer terrainData, data2D;
 
@@ -32,6 +39,7 @@ public class V1_0_TerrainChunkData extends TerrainChunkData {
 
     public V1_0_TerrainChunkData(Chunk chunk, byte subChunk) {
         super(chunk, subChunk);
+        isNull = false;
     }
 
     @Override
@@ -42,42 +50,55 @@ public class V1_0_TerrainChunkData extends TerrainChunkData {
 
     @Override
     public boolean loadTerrain() {
-        if(terrainData == null){
+        if (terrainData == null) {
             try {
                 byte[] rawData = this.chunk.worldData.getChunkData(chunk.x, chunk.z, ChunkTag.TERRAIN, chunk.dimension, subChunk, true);
-                if(rawData == null) this.terrainData = ByteBuffer.wrap(new byte[]{});
-                else this.terrainData = ByteBuffer.wrap(rawData);
+                if (rawData == null) {
+                    this.terrainData = null;
+                    this.isNull = true;
+                    return false;
+                } else {
+                    this.terrainData = ByteBuffer.wrap(rawData);
+                }
                 return true;
-            } catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
                 //data is not present
                 //return false;
-                this.terrainData = ByteBuffer.wrap(new byte[]{});
-                return true;
+                this.terrainData = null;
+                this.isNull = true;
+                return false;
             }
+        } else {
+            return true;
         }
-        else return true;
     }
 
     @Override
     public boolean load2DData() {
-        if(data2D == null){
+        if (data2D == null) {
             try {
                 byte[] rawData = this.chunk.worldData.getChunkData(chunk.x, chunk.z, ChunkTag.DATA_2D, chunk.dimension, subChunk, false);
-                if(rawData == null) this.data2D = ByteBuffer.wrap(new byte[]{});
-                else this.data2D = ByteBuffer.wrap(rawData);
+                if (rawData == null) {
+                    this.data2D = null;
+                    this.isNull = true;
+                    return false;
+                } else {
+                    this.data2D = ByteBuffer.wrap(rawData);
+                }
                 return true;
-            } catch (Exception e){
+            } catch (Exception e) {
                 //data is not present
                 //return false;
                 e.printStackTrace();
-                this.data2D = ByteBuffer.wrap(new byte[]{});
-                return true;
+                this.data2D = null;
+                this.isNull = true;
+                return false;
             }
+        } else {
+            return true;
         }
-        else return true;
     }
-
 
     @Override
     public void createEmpty() {
@@ -92,46 +113,44 @@ public class V1_0_TerrainChunkData extends TerrainChunkData {
         byte sandstone = (byte) 24;
 
         //generate super basic terrain (one layer of bedrock, 31 layers of sandstone)
-        for(x = 0; x < chunkW; x++){
-            for(z = 0; z < chunkL; z++){
-                for(y = 0, realY = chunkH * this.subChunk; y < chunkH; y++, i++, realY++){
+        for (x = 0; x < chunkW; x++) {
+            for (z = 0; z < chunkL; z++) {
+                for (y = 0, realY = chunkH * this.subChunk; y < chunkH; y++, i++, realY++) {
                     terrain[i] = (realY == 0 ? bedrock : (realY < 32 ? sandstone : 0));
                 }
             }
         }
 
-
         //fill meta-data with 0
-        for(; i < POS_META_DATA; i++){
+        for (; i < POS_META_DATA; i++) {
             terrain[i] = (byte) 0;
         }
 
         //fill blocklight with 0xff
-        for(; i < POS_BLOCK_LIGHT; i++){
+        for (; i < POS_BLOCK_LIGHT; i++) {
             terrain[i] = (byte) 0xff;
         }
 
         //fill block-light with 0xff
-        for(; i < TERRAIN_LENGTH; i++){
+        for (; i < TERRAIN_LENGTH; i++) {
             terrain[i] = (byte) 0xff;
         }
 
         this.terrainData = ByteBuffer.wrap(terrain);
         i = 0;
 
-
-        if(this.subChunk == (byte) 0){
+        if (this.subChunk == (byte) 0) {
 
             byte[] data2d = new byte[DATA2D_LENGTH];
 
             //fill heightmap
-            for(; i < POS_BIOME_DATA;){
+            for (; i < POS_BIOME_DATA;) {
                 data2d[i++] = 0;
                 data2d[i++] = 32;
             }
 
             //fill biome data
-            for(; i < DATA2D_LENGTH;){
+            for (; i < DATA2D_LENGTH;) {
                 data2d[i++] = 1;//biome: plains
                 data2d[i++] = (byte) 42;//r
                 data2d[i++] = (byte) 42;//g
@@ -141,9 +160,7 @@ public class V1_0_TerrainChunkData extends TerrainChunkData {
             this.data2D = ByteBuffer.wrap(data2d);
         }
 
-
     }
-
 
     @Override
     public byte getBlockTypeId(int x, int y, int z) {
@@ -184,7 +201,8 @@ public class V1_0_TerrainChunkData extends TerrainChunkData {
     }
 
     /**
-     * Sets a block type, and also set the corresponding dirty table entry and set the saving flag.
+     * Sets a block type, and also set the corresponding dirty table entry and
+     * set the saving flag.
      */
     @Override
     public void setBlockTypeId(int x, int y, int z, int type) {
@@ -215,11 +233,13 @@ public class V1_0_TerrainChunkData extends TerrainChunkData {
 
     @Override
     public byte getBiome(int x, int z) {
-        if(data2D.hasArray() && data2D.array().length == 0) return 0;
+        if (data2D.hasArray() && data2D.array().length == 0) {
+            return 0;
+        }
         return data2D.get(POS_BIOME_DATA + get2Di(x, z));
     }
 
-    private int getNoise(int base, int x, int z){
+    private int getNoise(int base, int x, int z) {
         // noise values are between -1 and 1
         // 0.0001 is added to the coordinates because integer values result in 0
         double oct1 = Noise.noise(
@@ -238,7 +258,6 @@ public class V1_0_TerrainChunkData extends TerrainChunkData {
         MCPE 1.0 stopped embedding foliage color data in the chunk data,
          so now we fake the colors by combining biome colors with Perlin noise
      */
-
     @Override
     public byte getGrassR(int x, int z) {
         Biome biome = Biome.getBiome(getBiome(x, z) & 0xff);
@@ -266,7 +285,9 @@ public class V1_0_TerrainChunkData extends TerrainChunkData {
 
     @Override
     public int getHeightMapValue(int x, int z) {
-        if(data2D.hasArray() && data2D.array().length == 0) return 0;
+        if (data2D.hasArray() && data2D.array().length == 0) {
+            return 0;
+        }
         short h = data2D.getShort(POS_HEIGHTMAP + (get2Di(x, z) << 1));
         return ((h & 0xff) << 8) | ((h >> 8) & 0xff);//little endian to big endian
     }

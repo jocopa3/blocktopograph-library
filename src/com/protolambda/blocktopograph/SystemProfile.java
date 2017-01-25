@@ -82,6 +82,7 @@ public class SystemProfile {
     
     public static long getAvailableRAM() {
         SYSTEM_PROFILE.update();
+        
         return SYSTEM_PROFILE.SYSTEM_RAM;
     }
     
@@ -91,6 +92,7 @@ public class SystemProfile {
     
     public static long calculateMaxObjects(long estimatedSize, double ratio) {
         SYSTEM_PROFILE.update();
+        
         estimatedSize *= 1.05;
         
         return (long)((AvailableMemory / estimatedSize) * ratio);
