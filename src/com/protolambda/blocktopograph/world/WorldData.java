@@ -57,13 +57,15 @@ public class WorldData {
         this.world = world;
     }
 
-    protected static final int DEFAULT_CACHE_SIZE = 16384 * 64;
+    protected static final int DEFAULT_BLOCK_SIZE = 0x28000;
     protected static final boolean SHOULD_CREATE_IF_MISSING = false;
 
     // Will later include settings for stuff...
     private void openDB(File DBFile) throws IOException {
         LevelDBOptions options = new LevelDBOptions();
         options.setCreateIfMissing(SHOULD_CREATE_IF_MISSING);
+        options.setBlockSize(DEFAULT_BLOCK_SIZE);
+        
         db = new LevelDB(DBFile.getAbsolutePath(), options);
 
         System.out.println("Opened Database for " + world.getWorldDisplayName());
@@ -174,6 +176,10 @@ public class WorldData {
         //ro.fillCache(true);
         //ros.put(Thread.currentThread().getName(), ro);
         //}
+
+        if(db == null) 
+            return null;
+        
         byte[] chunkKey = getChunkDataKey(x, z, type, dimension, subChunk, asSubChunk);
         //Log.d("Getting cX: "+x+" cZ: "+z+ " with key: "+bytesToHex(chunkKey, 0, chunkKey.length));
 

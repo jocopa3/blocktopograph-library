@@ -26,6 +26,16 @@ public final class LevelDataConverter {
         return levelTag;
     }
 
+    public static CompoundTag read(File file, CompoundTag root) throws IOException {
+        FileInputStream fis = new FileInputStream(file);
+        BufferedInputStream is = new BufferedInputStream(fis);
+        skip(is, 8);
+        NBTInputStream in = new NBTInputStream(is);
+        root.setValue(in.readTopLevelTags());
+        in.close();
+        return root;
+    }
+
     public static void write(CompoundTag levelTag, File file) throws IOException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         NBTOutputStream out = new NBTOutputStream(bos);
@@ -41,7 +51,8 @@ public final class LevelDataConverter {
     }
 
     /**
-     * source: http://stackoverflow.com/questions/14057720/robust-skipping-of-data-in-a-java-io-inputstream-and-its-subtypes
+     * source:
+     * http://stackoverflow.com/questions/14057720/robust-skipping-of-data-in-a-java-io-inputstream-and-its-subtypes
      * <p/>
      * Skips n bytes.
      */
@@ -51,12 +62,16 @@ public final class LevelDataConverter {
             if (n1 > 0) {
                 n -= n1;
             } else if (n1 == 0) { // should we retry? lets read one byte
-                if (is.read() == -1)  // EOF
+                if (is.read() == -1) // EOF
+                {
                     break;
-                else
+                } else {
                     n--;
+                }
             } else // negative? this should never happen but...
+            {
                 throw new IOException("skip() returned a negative value - this should never happen");
+            }
         }
     }
 

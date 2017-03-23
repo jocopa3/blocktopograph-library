@@ -67,8 +67,6 @@ public class ChunkManager {
             chunks.clear();
             nullChunks.clear();
         }
-
-        System.gc();
     }
 
     public static long xzToKey(int x, int z) {

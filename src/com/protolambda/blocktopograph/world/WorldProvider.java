@@ -282,7 +282,7 @@ public class WorldProvider implements WorldProviderInterface {
             return null;
         }
     }
-    
+
     //@Override
     public ChunkManager getChunkManager(Dimension d) {
         switch (d) {
@@ -300,5 +300,17 @@ public class WorldProvider implements WorldProviderInterface {
     @Override
     public void addMarker(AbstractMarker marker) {
         //mapFragment.addMarker(marker);
+    }
+
+    public void clean() {
+        if (cmOverworld != null) {
+            cmOverworld.disposeAll();
+        }
+        if (cmNether != null) {
+            cmNether.disposeAll();
+        }
+        if (cmEnd != null) {
+            cmEnd.disposeAll();
+        }
     }
 }

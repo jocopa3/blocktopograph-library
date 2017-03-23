@@ -211,4 +211,10 @@ public class World implements Serializable {
             it.close();
         }
     }
+    
+    public void logDBTables() {
+        System.out.println(this.worldData.db.property("leveldb.stats"));
+        System.out.println(this.worldData.db.property("leveldb.sstables"));
+        
+    }
 }
